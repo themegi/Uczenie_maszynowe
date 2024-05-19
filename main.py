@@ -1,9 +1,13 @@
 import numpy as np
+from sklearn.compose import ColumnTransformer
 from sklearn.datasets import fetch_california_housing
+from sklearn.preprocessing import LabelEncoder, OneHotEncoder
+
 import vdm
 from sklearn.datasets import load_boston
 import pandas as pd
 from sklearn.neighbors import NearestNeighbors
+import data
 
 
 class HVDM(vdm.VDM):
@@ -98,19 +102,41 @@ class HVDM(vdm.VDM):
 
 # housing = fetch_california_housing()
 # housing_data = housing['data']
-# df = pd.DataFrame(housing_data)   'safe', 'borderline', 'rare', 'outlier'
+# df = pd.DataFrame(housing_data)
+# 'safe', 'borderline', 'rare', 'outlier'
 outputs = [1, 2 , 3, 4]
+
+# auto_data, auto_class, auto_cat = data.automobileRead()
+# print (auto_data)
+# # autos = auto_data.to_numpy()
+# X = auto_data.drop(columns=['Class', 'Type'])
+# y = auto_data['Class']
+#
+# numerical_features = X.select_dtypes(include=['float64', 'int64'])
+# categorical_features = X.select_dtypes(include=['object'])
+# encoder = OneHotEncoder(sparse=False)
+# encoded_categorical_features = encoder.fit_transform(categorical_features)
+# autos = np.hstack((numerical_features.values, encoded_categorical_features))
+
 
 boston = load_boston()
 boston_data = boston['data']
+print (boston_data)
 categorical_ix = [3,8]
-
-cat = []
-hvdm_metric = HVDM(boston_data, 8, outputs, categorical_ix, [np.nan, 0])
+hvdm_metric = HVDM(boston_data, 8, categorical_ix, [np.nan, 0])
 neighbor = NearestNeighbors(metric=hvdm_metric.hvdm)
 neighbor.fit(boston_data)
-result = neighbor.kneighbors(boston_data[0].reshape(1, -1), n_neighbors = 5)
+result = neighbor.kneighbors(boston_data[0].reshape(1, -1), n_neighbors = 6, return_distance=False)
 print(result)
+
+
+
+
+# hvdm_metric = HVDM(autos, auto_data.columns.get_loc('Class'), auto_cat, [np.nan, 0])
+# neighbor = NearestNeighbors(metric=hvdm_metric.hvdm)
+# neighbor.fit(autos)
+# result = neighbor.kneighbors(autos[0].reshape(1, -1), n_neighbors = 6, return_distance=False)
+# print(result)
 
 
 # print(housing_data.head(3))

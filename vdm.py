@@ -93,6 +93,12 @@ class VDM():
             N_ay = self.final_count[i, y_ix, -1].flatten()
             N_axc = self.final_count[i, x_ix].flatten()
             N_ayc = self.final_count[i, y_ix].flatten()
+            # with np.errstate(divide='ignore', invalid='ignore'):
+            #     P_axc = np.true_divide(N_axc, N_ax)
+            #     P_ayc = np.true_divide(N_ayc, N_ay)
+            #     P_axc[~np.isfinite(P_axc)] = 0
+            #     P_ayc[~np.isfinite(P_ayc)] = 0
+            #     temp_result = np.sum(np.abs(P_axc - P_ayc))
             if N_ax != 0 and N_ay != 0:
                 temp_result = abs(N_axc / N_ax - N_ayc / N_ay)
                 temp_result = np.sum(temp_result)
