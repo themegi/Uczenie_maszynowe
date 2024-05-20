@@ -101,13 +101,10 @@ class HVDM(vdm.VDM):
         return np.sum(np.square(results_array))
 
 
-# housing = fetch_california_housing()
-# housing_data = housing['data']
-# df = pd.DataFrame(housing_data)
-# 'safe', 'borderline', 'rare', 'outlier'
-outputs = [1, 2 , 3, 4]
+auto_data, auto_class, auto_cat, classes = data.automobileRead()
+x = []
 
-auto_data, auto_class, auto_cat = data.automobileRead()
+
 
 
 label_encoder = preprocessing.LabelEncoder()
@@ -115,6 +112,16 @@ for i in  auto_cat:
     auto_data[i] = label_encoder.fit_transform(auto_data[i])
 autos = auto_data.to_numpy()
 results = np.zeros((len(autos), 6))
+
+labels = autos[:, 25]
+unique_classes, counts = np.unique(labels, return_counts=True)
+class_counts = np.column_stack((unique_classes, counts))
+class_counts_sorted = np.argsort(class_counts[:, 1])
+sorte_data = class_counts[class_counts_sorted][:-1]
+print(sorte_data)
+max_class = class_counts[class_counts_sorted][-1]
+max_class = (int(max_class[1]))
+
 
 # boston = load_boston()
 # boston_data = boston['data']
@@ -125,8 +132,6 @@ results = np.zeros((len(autos), 6))
 # neighbor.fit(boston_data)
 # result = neighbor.kneighbors(boston_data[0].reshape(1, -1), n_neighbors = 6, return_distance=False)
 # print(result)
-
-
 
 
 hvdm_metric = HVDM(autos, auto_data.columns.get_loc('Class'), auto_cat, [np.nan, 0])
@@ -153,7 +158,26 @@ for j in range(len(autos)):
     else:
         autos[j][autos.shape[1] - 1] = 3  # outlier
 
-print(autos)
+
+for k in range(len(sorte_data)):
+    selected_examples = []
+    other = []
+    for i in range(max_class - int(sorte_data[k][1])):
+        #print(sorte_data[k][1])
+        class_label = sorte_data[k][0]
+        selected_examples = autos[(autos[:, auto_class] == class_label) & (autos[:, 26] == 1)]
+        other = autos[(autos[:, auto_class] == class_label) & (autos[:, 26] != 1)]
+    # for j in range(int(sorte_data[k][1])):
+        random_index = np.random.choice(selected_examples.shape[0])
+        x = selected_examples[random_index]
+        if other.shape[0] > 0:
+            random_index = np.random.choice(other.shape[0])
+            y = other[random_index]
+        else:
+            y = selected_examples[random_index]
+        print(x, y, "\n")
+
+
 
 # result = neighbor.kneighbors(autos[0].reshape(1, -1), n_neighbors=6, return_distance=False)
 # print(result[0][0])
