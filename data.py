@@ -19,8 +19,11 @@ def clevelandRead():
     data = pd.read_csv('C:/Users/Megi/Studia/UM/Projekt/Datasets/cleveland-0_vs_4.dat', sep=",", header=None)
     class_index = 13
     data.rename(columns={class_index: 'Class'}, inplace=True)
-    utils.addType(data)
-    return data, class_index
+    data = utils.sortDf(data)
+    cat_values = utils.getCatIndex(data) # find categorical columns
+    amount_classes = data['Class'].value_counts().sort_values(ascending=True)
+    amount_classes = amount_classes.to_numpy()
+    return data, class_index, cat_values, amount_classes
 
 
 def hayesrothRead():
