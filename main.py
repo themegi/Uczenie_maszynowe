@@ -1,4 +1,5 @@
 import numpy as np
+from sklearn import preprocessing
 from sklearn.compose import ColumnTransformer
 from sklearn.datasets import fetch_california_housing
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
@@ -106,37 +107,58 @@ class HVDM(vdm.VDM):
 # 'safe', 'borderline', 'rare', 'outlier'
 outputs = [1, 2 , 3, 4]
 
-# auto_data, auto_class, auto_cat = data.automobileRead()
-# print (auto_data)
-# # autos = auto_data.to_numpy()
-# X = auto_data.drop(columns=['Class', 'Type'])
-# y = auto_data['Class']
-#
-# numerical_features = X.select_dtypes(include=['float64', 'int64'])
-# categorical_features = X.select_dtypes(include=['object'])
-# encoder = OneHotEncoder(sparse=False)
-# encoded_categorical_features = encoder.fit_transform(categorical_features)
-# autos = np.hstack((numerical_features.values, encoded_categorical_features))
+auto_data, auto_class, auto_cat = data.automobileRead()
 
 
-boston = load_boston()
-boston_data = boston['data']
-print (boston_data)
-categorical_ix = [3,8]
-hvdm_metric = HVDM(boston_data, 8, categorical_ix, [np.nan, 0])
-neighbor = NearestNeighbors(metric=hvdm_metric.hvdm)
-neighbor.fit(boston_data)
-result = neighbor.kneighbors(boston_data[0].reshape(1, -1), n_neighbors = 6, return_distance=False)
-print(result)
+label_encoder = preprocessing.LabelEncoder()
+for i in  auto_cat:
+    auto_data[i] = label_encoder.fit_transform(auto_data[i])
+autos = auto_data.to_numpy()
+results = np.zeros((len(autos), 6))
 
-
-
-
-# hvdm_metric = HVDM(autos, auto_data.columns.get_loc('Class'), auto_cat, [np.nan, 0])
+# boston = load_boston()
+# boston_data = boston['data']
+# print (boston_data)
+# categorical_ix = [3,8]
+# hvdm_metric = HVDM(boston_data, 8, categorical_ix, [np.nan, 0])
 # neighbor = NearestNeighbors(metric=hvdm_metric.hvdm)
-# neighbor.fit(autos)
-# result = neighbor.kneighbors(autos[0].reshape(1, -1), n_neighbors = 6, return_distance=False)
+# neighbor.fit(boston_data)
+# result = neighbor.kneighbors(boston_data[0].reshape(1, -1), n_neighbors = 6, return_distance=False)
 # print(result)
 
 
-# print(housing_data.head(3))
+
+
+hvdm_metric = HVDM(autos, auto_data.columns.get_loc('Class'), auto_cat, [np.nan, 0])
+neighbor = NearestNeighbors(metric=hvdm_metric.hvdm)
+neighbor.fit(autos)
+for i in range(len(autos)):
+    result = neighbor.kneighbors(autos[i].reshape(1, -1), n_neighbors = 6, return_distance=False)
+    results[i] = result.copy()
+types = np.zeros(len(autos))
+autos = np.insert(autos, autos.shape[1], types, axis=1)
+for j in range(len(autos)):
+    class_counter = 0
+    a_class = autos[int(results[j][0])][auto_class]
+    for i in range(1, 6):
+        if a_class == autos[int(results[j][i])][auto_class]:
+            class_counter += 1
+
+    if class_counter >= 4:
+        autos[j][autos.shape[1] - 1] = 0  # safe
+    elif class_counter >= 2:
+        autos[j][autos.shape[1] - 1] = 1  # borderline
+    elif class_counter == 1:
+        autos[j][autos.shape[1] - 1] = 2  # rare
+    else:
+        autos[j][autos.shape[1] - 1] = 3  # outlier
+
+print(autos)
+
+# result = neighbor.kneighbors(autos[0].reshape(1, -1), n_neighbors=6, return_distance=False)
+# print(result[0][0])
+# print(autos[0])
+
+
+
+

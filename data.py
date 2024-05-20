@@ -1,4 +1,6 @@
 import pandas as pd
+from sklearn import preprocessing
+
 import utils
 
 
@@ -6,13 +8,8 @@ def automobileRead():
     data = pd.read_csv('C:/Users/Megi/Studia/UM/Projekt/Datasets/autos.dat', sep=",", header=None)
     class_index = 25
     data.rename(columns={25: 'Class'}, inplace=True)
-    utils.addType(data)
-    utils.sortDf(data)
+    data = utils.sortDf(data)
     cat_values = utils.getCatIndex(data) # find categorical columns
-    #encoded = pd.get_dummies(data)
-    #dataframe = pd.concat([data, encoded], axis=1)
-
-
     return data, class_index, cat_values
 
 
