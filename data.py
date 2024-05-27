@@ -4,13 +4,9 @@ import utils
 
 def automobileRead():
     data = pd.read_csv('C:/Users/Megi/Studia/UM/Projekt/Datasets/autos.dat', sep=",", header=None)
-    class_index = 25
     data.rename(columns={25: 'Class'}, inplace=True)
-    data = utils.sortDf(data)
     cat_values = utils.getCatIndex(data) # find categorical columns
-    amount_classes = data['Class'].value_counts().sort_values(ascending=True)
-    amount_classes = amount_classes.to_numpy()
-    return data, class_index, cat_values, amount_classes
+    return data, cat_values
 
 
 def clevelandRead():
