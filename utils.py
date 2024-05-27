@@ -99,7 +99,6 @@ def preprocess(train_X, train_y, max_class, unique_classes):
                 else:  # outlier
                     new_samples[i] = x_x * 0.9 + y_x * 0.1
                     new_samples_y[i] = x_y
-            print(new_samples)
             train_X = np.concatenate((train_X, new_samples), axis=0)
             train_y = np.concatenate((train_y, new_samples_y), axis=0)
     train_y = np.delete(train_y, 1, 1)
