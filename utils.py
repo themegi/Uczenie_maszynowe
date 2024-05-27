@@ -1,16 +1,14 @@
 import numpy as np
 import hvdm
+import pandas as pd
 from sklearn.neighbors import NearestNeighbors
 from sklearn import preprocessing
+from collections import Counter
 
 
 def sortDf(df):
     sorted_df = df.sort_values(by='Class', key=lambda x: df['Class'].value_counts().sort_values(ascending=True)[x])
     return sorted_df
-
-
-def addType(df):
-    df.insert(len(df.columns), 'Type', 'NaN')
 
 
 def getCatIndex(df):
@@ -37,33 +35,51 @@ def countClasses(data, class_idx):
     return sorted_data, max_class
 
 
-def kNN(data, class_idx, categories):
-    hvdm_metric = hvdm.HVDM(data, class_idx, categories, [np.nan, 0])
+def kNN(train_X, train_y, categories):
+    hvdm_metric = hvdm.HVDM(train_X, train_y, categories, [np.nan, 0])
     neighbor = NearestNeighbors(metric=hvdm_metric.hvdm)
-    neighbor.fit(data)
-    results = np.zeros((len(data), 6))
-    for i in range(len(data)):
-        result = neighbor.kneighbors(data[i].reshape(1, -1), n_neighbors=6, return_distance=False)
+    neighbor.fit(train_X)
+    results = np.zeros((len(train_X), 6))
+    for i in range(len(train_X)):
+        result = neighbor.kneighbors(train_X[i].reshape(1, -1), n_neighbors=6, return_distance=False)
         results[i] = result.copy()
-    types = np.zeros(len(data))
-    data = np.insert(data, data.shape[1], types, axis=1)
-    print(data.shape)
-    for j in range(len(data)):
+    types = np.zeros(len(train_y))
+    train_y = train_y.reshape(-1, 1)
+    train_y = np.insert(train_y, train_y.shape[1], types, axis=1)
+    for j in range(len(train_y)):
         class_counter = 0
-        a_class = data[int(results[j][0])][class_idx]
+        a_class = train_y[int(results[j][0])][0]
         for i in range(1, 6):
-            if a_class == data[int(results[j][i])][class_idx]:
+            if a_class == train_y[int(results[j][i])][0]:
                 class_counter += 1
         if class_counter >= 4:
-            data[j][data.shape[1] - 1] = 0  # safe
+            train_y[j][1] = 0  # safe
         elif class_counter >= 2:
-            data[j][data.shape[1] - 1] = 1  # borderline
+            train_y[j][1] = 1  # borderline
         elif class_counter == 1:
-            data[j][data.shape[1] - 1] = 2  # rare
+            train_y[j][1] = 2  # rare
         else:
-            data[j][data.shape[1] - 1] = 3  # outlier
-    return data
+            train_y[j][1] = 3  # outlier
+    return train_X, train_y
 
+
+def sort_by_class_quantity(train_X, train_y):
+    # Count the occurrences of each class in train_y
+    class_counts = Counter(train_y)
+    most_common_class, max_count = class_counts.most_common(1)[0]
+    print(most_common_class,max_count)
+
+    # Create a list of classes sorted by their count (ascending)
+    sorted_classes = sorted(class_counts, key=class_counts.get)
+
+    # Create an array of indices that would sort train_y by class frequency
+    sorted_indices = np.argsort([sorted_classes.index(cls) for cls in train_y])
+
+    # Use the sorted indices to reorder train_X and train_y
+    sorted_train_X = train_X[sorted_indices]
+    sorted_train_y = train_y[sorted_indices]
+
+    return sorted_train_X, sorted_train_y, max_count, most_common_class
 
 def preprocess(data, sorted_data, max_class, class_idx):
     for k in range(len(sorted_data)):
@@ -91,3 +107,20 @@ def preprocess(data, sorted_data, max_class, class_idx):
                 new_samples[i] = x * 0.9 + y * 0.1
         data = np.concatenate((data, new_samples), axis=0)
     return data
+
+def select_examples_by_class_and_type(train_X, train_y, target_class):
+
+    # Filter indices based on class and type
+    type_1_indices = np.where((train_y[:, 0] == target_class) & (train_y[:, 1] == 1))[0]
+    other_types_indices = np.where((train_y[:, 0] == target_class) & (train_y[:, 1] != 1))[0]
+
+    class_count = len(np.where((train_y[:, 0] == target_class))[0])
+
+
+    # Select examples based on filtered indices
+    type_X = train_X[type_1_indices]
+    type_y = train_y[type_1_indices]
+    other_X = train_X[other_types_indices]
+    other_y = train_y[other_types_indices]
+
+    return type_X, type_y, other_X, other_y, class_count
