@@ -103,8 +103,8 @@ class VDM():
                 temp_result = abs(N_axc / N_ax - N_ayc / N_ay)
                 temp_result = np.sum(temp_result)
                 result[i] = temp_result
-            else:
-                print("Division by zero is not allowed!")
+            # else:
+            #     print("Division by zero is not allowed!")
 
 
         return result

@@ -1,4 +1,7 @@
 import numpy as np
+from sklearn.metrics import confusion_matrix
+from pandas.api.types import is_numeric_dtype
+
 import hvdm
 from sklearn.neighbors import NearestNeighbors
 from sklearn import preprocessing
@@ -11,7 +14,10 @@ def sortDf(df):
 
 
 def getCatIndex(df):
-    cat_values = list(df.columns.get_indexer(df.select_dtypes(include=['object']).columns))
+    if is_numeric_dtype(df['Class']):
+        cat_values = list(df.columns.get_indexer(df.select_dtypes(include=['object']).columns))
+    else:
+        cat_values = list(df.columns.get_indexer(df.select_dtypes(include=['object']).columns))[:-1]
     return cat_values
 
 
@@ -20,13 +26,19 @@ def first_proccess(data, categories):
     y = data["Class"]
     y = y.to_numpy()
     label_encoder = preprocessing.LabelEncoder()
-    for i in categories:
-        X[i] = label_encoder.fit_transform(X[i])
+    if len(categories) > 0:
+        for i in categories:
+            X[i] = label_encoder.fit_transform(X[i])
     X = X.to_numpy()
+    if y.dtype != 'int64':
+        y = label_encoder.fit_transform(y)
+    # y = y.to_numpy()
     return X, y
 
 
 def kNN(train_X, train_y, categories):
+    if len(categories) <= 1:
+        categories = [1]
     hvdm_metric = hvdm.HVDM(train_X, train_y, categories, [np.nan, 0])
     neighbor = NearestNeighbors(metric=hvdm_metric.hvdm)
     neighbor.fit(train_X)
@@ -119,3 +131,23 @@ def select_examples_by_class_and_type(train_X, train_y, target_class):
     other_y = train_y[other_types_indices]
 
     return type_X, type_y, other_X, other_y, class_count
+
+def calculate_specificity(y_true, y_pred):
+    cm = confusion_matrix(y_true, y_pred)
+    specificity = []
+    for i in range(cm.shape[0]):
+        tn = np.sum(cm) - np.sum(cm[i, :]) - np.sum(cm[:, i]) + cm[i, i]
+        fp = np.sum(cm[:, i]) - cm[i, i]
+        specificity_i = tn / (tn + fp)
+        specificity.append(specificity_i)
+    return specificity
+
+def calculate_sensitivity(y_true, y_pred):
+    cm = confusion_matrix(y_true, y_pred)
+    sensitivity = []
+    for i in range(cm.shape[0]):
+        tp = cm[i, i]
+        fn = np.sum(cm[i, :]) - tp
+        sensitivity_i = tp / (tp + fn)
+        sensitivity.append(sensitivity_i)
+    return sensitivity
