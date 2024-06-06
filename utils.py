@@ -32,15 +32,15 @@ def first_proccess(data, categories):
     X = X.to_numpy()
     if y.dtype != 'int64':
         y = label_encoder.fit_transform(y)
-    # y = y.to_numpy()
     return X, y
 
 
 def kNN(train_X, train_y, categories):
-    if len(categories) <= 1:
-        categories = [1]
-    hvdm_metric = hvdm.HVDM(train_X, train_y, categories, [np.nan, 0])
-    neighbor = NearestNeighbors(metric=hvdm_metric.hvdm)
+    if len(categories) == 0:
+        neighbor = NearestNeighbors()
+    else:
+        hvdm_metric = hvdm.HVDM(train_X, train_y, categories, [np.nan, 0])
+        neighbor = NearestNeighbors(metric=hvdm_metric.hvdm)
     neighbor.fit(train_X)
     results = np.zeros((len(train_X), 6))
     for i in range(len(train_X)):
@@ -151,3 +151,6 @@ def calculate_sensitivity(y_true, y_pred):
         sensitivity_i = tp / (tp + fn)
         sensitivity.append(sensitivity_i)
     return sensitivity
+
+def mean_sensitivity(sensitivity):
+    return np.mean(sensitivity, axis = 0)
