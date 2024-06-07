@@ -9,11 +9,12 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import classification_report
 
 # odchylenie standardowe
+# średnia albo wartość t-statystyki
 n_splits = 3
 n_repeats = 5
 
 kfold = RepeatedStratifiedKFold(n_splits=n_splits, n_repeats=n_repeats, random_state=1)
-# średnia albo wartość t-statystyki
+
 auto_data, auto_cat = data.yeastRead()
 
 X, y = utils.first_proccess(auto_data, auto_cat)
@@ -24,17 +25,22 @@ accuracy_list_svm = []
 precision_list_svm = []
 recall_list_svm = []
 f1_list_svm = []
-avg_sensitivity = np.empty((n_splits * n_repeats, len(all_classes)))
+avg_sensitivity_svm = np.empty((n_splits * n_repeats, len(all_classes)))
+avg_specificity_svm = np.empty((n_splits * n_repeats, len(all_classes)))
 
 accuracy_list_dt = []
 precision_list_dt = []
 recall_list_dt = []
 f1_list_dt = []
+avg_sensitivity_dt = np.empty((n_splits * n_repeats, len(all_classes)))
+avg_specificity_dt = np.empty((n_splits * n_repeats, len(all_classes)))
 
 accuracy_list_lr = []
 precision_list_lr = []
 recall_list_lr = []
 f1_list_lr = []
+avg_sensitivity_lr = np.empty((n_splits * n_repeats, len(all_classes)))
+avg_specificity_lr = np.empty((n_splits * n_repeats, len(all_classes)))
 
 for train_ix, test_ix in kfold.split(X, y):
     train_X, test_X = X[train_ix], X[test_ix]
@@ -63,19 +69,8 @@ for train_ix, test_ix in kfold.split(X, y):
     precision_list_svm.append(precision)
     recall_list_svm.append(recall)
     f1_list_svm.append(f1)
-    sensitivity = utils.calculate_sensitivity(test_y, y_pred)
-    avg_sensitivity[counter] = sensitivity
-    print("Specificity: ", utils.calculate_specificity(test_y, y_pred))
-    print("Sensitivity: ", utils.calculate_sensitivity(test_y, y_pred))
-
-    # res = []
-    # for l in all_classes:
-    #     prec, recall, _, _ = precision_recall_fscore_support(np.array(test_y) == l,
-    #                                                          np.array(y_pred) == l,
-    #                                                          pos_label=True, average=None, zero_division=0)
-    #     res.append([l, recall[0], recall[1]])
-    #
-    # print(pd.DataFrame(res, columns=['class', 'specificity', 'sensitivity']))
+    avg_sensitivity_svm[counter] = utils.calculate_sensitivity(test_y, y_pred)
+    avg_specificity_svm[counter] = utils.calculate_specificity(test_y, y_pred)
 
     #### Decision tree ####
     dt_model = DecisionTreeClassifier()
@@ -91,18 +86,8 @@ for train_ix, test_ix in kfold.split(X, y):
     precision_list_dt.append(precision)
     recall_list_dt.append(recall)
     f1_list_dt.append(f1)
-
-    print("Specificity: ", utils.calculate_specificity(test_y, y_pred))
-    print("Sensitivity: ", utils.calculate_sensitivity(test_y, y_pred))
-
-    # res = []
-    # for l in all_classes:
-    #     prec, recall, _, _ = precision_recall_fscore_support(np.array(test_y) == l,
-    #                                                          np.array(y_pred) == l,
-    #                                                          pos_label=True, average=None, zero_division=0)
-    #     res.append([l, recall[0], recall[1]])
-    #
-    # print(pd.DataFrame(res, columns=['class', 'specificity', 'sensitivity']))
+    avg_sensitivity_dt[counter] = utils.calculate_sensitivity(test_y, y_pred)
+    avg_specificity_dt[counter] = utils.calculate_specificity(test_y, y_pred)
 
     #### Logistic Regression ####
     lr_model = LogisticRegression(solver='saga', max_iter=8000)
@@ -118,18 +103,10 @@ for train_ix, test_ix in kfold.split(X, y):
     precision_list_lr.append(precision)
     recall_list_lr.append(recall)
     f1_list_lr.append(f1)
-    print("Specificity: ", utils.calculate_specificity(test_y, y_pred))
-    print("Sensitivity: ", utils.calculate_sensitivity(test_y, y_pred))
-
-    # res = []
-    # for l in all_classes:
-    #     prec, recall, _, _ = precision_recall_fscore_support(np.array(test_y) == l,
-    #                                                          np.array(y_pred) == l,
-    #                                                          pos_label=True, average=None, zero_division=0)
-    #     res.append([l, recall[0], recall[1]])
-    #
-    # print(pd.DataFrame(res, columns=['class', 'specificity', 'sensitivity']))
+    avg_sensitivity_lr[counter] = utils.calculate_sensitivity(test_y, y_pred)
+    avg_specificity_lr[counter] = utils.calculate_specificity(test_y, y_pred)
     counter += 1
+
 avg_accuracy_svm = np.mean(accuracy_list_svm)
 avg_precision_svm = np.mean(precision_list_svm)
 avg_recall_svm = np.mean(recall_list_svm)
@@ -145,20 +122,33 @@ avg_precision_lr = np.mean(precision_list_lr)
 avg_recall_lr = np.mean(recall_list_lr)
 avg_f1_lr = np.mean(f1_list_lr)
 
-svm_sensitivity = utils.mean_sensitivity(avg_sensitivity)
+svm_sensitivity = utils.mean_sensitivity(avg_sensitivity_svm)
+dt_sensitivity = utils.mean_sensitivity(avg_sensitivity_dt)
+lr_sensitivity = utils.mean_sensitivity(avg_sensitivity_lr)
+
+svm_specificity = utils.mean_specificity(avg_specificity_svm)
+dt_specificity = utils.mean_specificity(avg_specificity_dt)
+lr_specificity = utils.mean_specificity(avg_specificity_lr)
 
 print("Average Accuracy SVM:", avg_accuracy_svm)
 print("Average Precision SVM:", avg_precision_svm)
 print("Average Recall SVM:", avg_recall_svm)
 print("Average F1 SVM:", avg_f1_svm)
 print("Average Sensitivity SVM:", svm_sensitivity)
+print("Average Specificity SVM:", svm_specificity)
 
 print("Average Accuracy DT:", avg_accuracy_dt)
 print("Average Precision DT:", avg_precision_dt)
 print("Average Recall DT :", avg_recall_dt)
 print("Average F1 DT :", avg_f1_dt)
+print("Average Sensitivity DT:", dt_sensitivity)
+print("Average Specificity DT:", dt_specificity)
 
 print("Average Accuracy LR:", avg_accuracy_lr)
 print("Average Precision LR:", avg_precision_lr)
 print("Average Recall LR:", avg_recall_lr)
 print("Average F1 LR:", avg_f1_lr)
+print("Average Sensitivity LR:", lr_sensitivity)
+print("Average Specificity LR:", lr_specificity)
+
+#recall = sensitivity

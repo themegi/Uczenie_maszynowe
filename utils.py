@@ -132,6 +132,7 @@ def select_examples_by_class_and_type(train_X, train_y, target_class):
 
     return type_X, type_y, other_X, other_y, class_count
 
+
 def calculate_specificity(y_true, y_pred):
     cm = confusion_matrix(y_true, y_pred)
     specificity = []
@@ -141,6 +142,7 @@ def calculate_specificity(y_true, y_pred):
         specificity_i = tn / (tn + fp)
         specificity.append(specificity_i)
     return specificity
+
 
 def calculate_sensitivity(y_true, y_pred):
     cm = confusion_matrix(y_true, y_pred)
@@ -152,5 +154,10 @@ def calculate_sensitivity(y_true, y_pred):
         sensitivity.append(sensitivity_i)
     return sensitivity
 
+
 def mean_sensitivity(sensitivity):
-    return np.mean(sensitivity, axis = 0)
+    return np.mean(sensitivity, axis=0)
+
+
+def mean_specificity(specificity):
+    return np.mean(specificity, axis=0)
