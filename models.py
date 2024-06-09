@@ -1,12 +1,11 @@
 import numpy as np
-import data
 import utils
 from sklearn.model_selection import RepeatedStratifiedKFold
 from sklearn import svm
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import classification_report
+
 
 def models_dataset(auto_data, auto_cat, n_splits, n_repeats):
     X, y = utils.first_proccess(auto_data, auto_cat)
@@ -39,9 +38,6 @@ def models_dataset(auto_data, auto_cat, n_splits, n_repeats):
     for train_ix, test_ix in kfold.split(X, y):
         train_X, test_X = X[train_ix], X[test_ix]
         train_y, test_y = y[train_ix], y[test_ix]
-        train_0, train_1 = len(train_y[train_y == 0]), len(train_y[train_y == 1])
-        test_0, test_1 = len(test_y[test_y == 0]), len(test_y[test_y == 1])
-        print('>Train: 0=%d, 1=%d, Test: 0=%d, 1=%d' % (train_0, train_1, test_0, test_1))
         train_X, train_y, max_class, most_common = utils.sort_by_class_quantity(train_X, train_y)
         train_X, train_y = utils.kNN(train_X, train_y, auto_cat)
         unique_classes = np.unique(train_y[:, 0])
@@ -84,7 +80,7 @@ def models_dataset(auto_data, auto_cat, n_splits, n_repeats):
         avg_specificity_dt[counter] = utils.calculate_specificity(test_y, y_pred)
 
         #### Logistic Regression ####
-        lr_model = LogisticRegression(solver='saga', max_iter=8000)
+        lr_model = LogisticRegression(solver='saga', max_iter=9000)
         lr_model.fit(train_X, train_y.ravel())
         y_pred = lr_model.predict(test_X)
         # print("\nLogistic Regression MODEL:")
@@ -144,3 +140,12 @@ def models_dataset(auto_data, auto_cat, n_splits, n_repeats):
     print("Average F1 LR:", avg_f1_lr)
     print("Average Sensitivity LR:", lr_sensitivity)
     print("Average Specificity LR:", lr_specificity)
+
+    utils.t_test(avg_sensitivity_svm, avg_sensitivity_dt, avg_sensitivity_lr)
+    utils.t_test(avg_specificity_svm, avg_specificity_dt, avg_specificity_lr)
+
+    recall_arr = np.vstack((svm_sensitivity, dt_sensitivity, lr_sensitivity))
+    specificity_arr = np.vstack((svm_specificity, dt_specificity, lr_specificity))
+
+    utils.plot_recall(recall_arr)
+    utils.plot_specificity(specificity_arr)

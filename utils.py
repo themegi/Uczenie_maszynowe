@@ -1,11 +1,12 @@
 import numpy as np
+from scipy.stats import stats
 from sklearn.metrics import confusion_matrix
 from pandas.api.types import is_numeric_dtype
-
 import hvdm
 from sklearn.neighbors import NearestNeighbors
 from sklearn import preprocessing
 from collections import Counter
+import matplotlib.pyplot as plt
 
 
 def sortDf(df):
@@ -106,10 +107,10 @@ def preprocess(train_X, train_y, max_class, unique_classes):
                     new_samples[i] = x_x * 0.5 + y_x * 0.5
                     new_samples_y[i] = x_y
                 elif y_y[1] == 2:  # rare
-                    new_samples[i] = x_x * 0.7 + y_x * 0.3
+                    new_samples[i] = x_x * 0.85 + y_x * 0.15
                     new_samples_y[i] = x_y
                 else:  # outlier
-                    new_samples[i] = x_x * 0.9 + y_x * 0.1
+                    new_samples[i] = x_x * 0.95 + y_x * 0.05
                     new_samples_y[i] = x_y
             train_X = np.concatenate((train_X, new_samples), axis=0)
             train_y = np.concatenate((train_y, new_samples_y), axis=0)
@@ -161,3 +162,80 @@ def mean_sensitivity(sensitivity):
 
 def mean_specificity(specificity):
     return np.mean(specificity, axis=0)
+
+def t_test(svm, dt, lr):
+    t_statistic, p_value = stats.ttest_ind(svm, dt)
+    print(f"Paired t-test (SVM, DT): t-statistic = {t_statistic}, p-value = {p_value}")
+    t_statistic, p_value = stats.ttest_ind(svm, lr)
+    print(f"Paired t-test (SVM, LR): t-statistic = {t_statistic}, p-value = {p_value}")
+    t_statistic, p_value = stats.ttest_ind(dt, lr)
+    print(f"Paired t-test (DT, LR): t-statistic = {t_statistic}, p-value = {p_value}")
+
+def plot_recall(average_recall):
+    num_classifiers, num_classes = average_recall.shape
+
+    # X-axis labels for classes and classifiers
+    class_labels = []
+    for i in range(num_classes):
+        class_labels.append('Klasa ' + str(i))
+    classifier_labels = ['SVM', 'Decision Tree', 'Logistic Regression']
+
+    # Position of bars on the x-axis
+    x = np.arange(num_classes)  # the label locations
+
+    # Width of the bars
+    width = 0.2
+
+    # Create a bar plot
+    fig, ax = plt.subplots(figsize=(10, 6))
+
+    # Plot each classifier's recall for each class
+    for i in range(num_classifiers):
+        ax.bar(x + i * width, average_recall[i], width, label=classifier_labels[i])
+
+    # Add labels, title, and custom x-axis tick labels
+    ax.set_xlabel('Klasy')
+    ax.set_ylabel('Czułość')
+    ax.set_title('Średnia czułość dla każdej klasy w zależności od klasyfikatora')
+    ax.set_xticks(x + width)
+    ax.set_xticklabels(class_labels)
+    ax.legend()
+
+    # Display the plot
+    plt.tight_layout()
+    plt.show()
+
+
+def plot_specificity(average_specificity):
+    num_classifiers, num_classes = average_specificity.shape
+
+    # X-axis labels for classes and classifiers
+    class_labels = []
+    for i in range(num_classes):
+        class_labels.append('Klasa ' + str(i))
+    classifier_labels = ['SVM', 'Decision Tree', 'Logistic Regression']
+
+    # Position of bars on the x-axis
+    x = np.arange(num_classes)  # the label locations
+
+    # Width of the bars
+    width = 0.2
+
+    # Create a bar plot
+    fig, ax = plt.subplots(figsize=(10, 6))
+
+    # Plot each classifier's recall for each class
+    for i in range(num_classifiers):
+        ax.bar(x + i * width, average_specificity[i], width, label=classifier_labels[i])
+
+    # Add labels, title, and custom x-axis tick labels
+    ax.set_xlabel('Klasy')
+    ax.set_ylabel('Swoistość')
+    ax.set_title('Średnia swoistość dla każdej klasy w zależności od klasyfikatora')
+    ax.set_xticks(x + width)
+    ax.set_xticklabels(class_labels)
+    ax.legend()
+
+    # Display the plot
+    plt.tight_layout()
+    plt.show()
