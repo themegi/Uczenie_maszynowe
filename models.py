@@ -60,13 +60,13 @@ def models_dataset(auto_data, auto_cat, n_splits, n_repeats):
         avg_specificity_lr[counter] = utils.calculate_specificity(test_y, y_pred)
         counter += 1
 
-    svm_sensitivity = utils.mean_sensitivity(avg_sensitivity_svm)
-    dt_sensitivity = utils.mean_sensitivity(avg_sensitivity_dt)
-    lr_sensitivity = utils.mean_sensitivity(avg_sensitivity_lr)
+    svm_sensitivity, svm_sens_std = utils.mean_sensitivity(avg_sensitivity_svm)
+    dt_sensitivity, dt_sens_std = utils.mean_sensitivity(avg_sensitivity_dt)
+    lr_sensitivity, lr_sens_std = utils.mean_sensitivity(avg_sensitivity_lr)
 
-    svm_specificity = utils.mean_specificity(avg_specificity_svm)
-    dt_specificity = utils.mean_specificity(avg_specificity_dt)
-    lr_specificity = utils.mean_specificity(avg_specificity_lr)
+    svm_specificity, svm_spec_std = utils.mean_specificity(avg_specificity_svm)
+    dt_specificity, dt_spec_std = utils.mean_specificity(avg_specificity_dt)
+    lr_specificity, lr_spec_std = utils.mean_specificity(avg_specificity_lr)
 
     print("P-values for sensitivity: ")
     utils.t_test(avg_sensitivity_svm, avg_sensitivity_dt, avg_sensitivity_lr)
@@ -75,12 +75,18 @@ def models_dataset(auto_data, auto_cat, n_splits, n_repeats):
 
     recall_arr = np.vstack((svm_sensitivity, dt_sensitivity, lr_sensitivity))
     specificity_arr = np.vstack((svm_specificity, dt_specificity, lr_specificity))
+    recall_std = np.vstack((svm_sens_std, dt_sens_std, lr_sens_std))
+    specificity_std = np.vstack((svm_spec_std, dt_spec_std, lr_spec_std))
 
     class_labels = utils.plot_recall(recall_arr)
     utils.plot_specificity(specificity_arr)
 
+    recall_arr = utils.std(recall_arr, recall_std)
+    specificity_arr = utils.std(specificity_arr, specificity_std)
+
+
     headers = np.array([['SVM'], ['DT'], ['LR']])
-    recall_arr = np.column_stack((headers, np.round(recall_arr, 2)))
-    specificity_arr = np.column_stack((headers, np.round(specificity_arr, 2)))
+    recall_arr = np.column_stack((headers, recall_arr))
+    specificity_arr = np.column_stack((headers, specificity_arr))
     print(tabulate(recall_arr, class_labels, tablefmt="latex"))
     print(tabulate(specificity_arr, class_labels, tablefmt="latex"))

@@ -158,22 +158,12 @@ def calculate_sensitivity(y_true, y_pred):
 
 
 def mean_sensitivity(sensitivity):
-    return np.mean(sensitivity, axis=0)
+    return np.mean(sensitivity, axis=0), np.std(sensitivity, axis=0)
 
 
 def mean_specificity(specificity):
-    return np.mean(specificity, axis=0)
+    return np.mean(specificity, axis=0), np.std(specificity, axis=0)
 
-def p_array(p_values):
-    column = []
-    for i in p_values:
-        if i <= 0.05:
-            column.append('+')
-        else:
-            column.append('-')
-    column = np.array(column).reshape(-1, 1)
-    p_array = np.column_stack((p_values, column))
-    return p_array
 
 def class_labels(array):
     num_classes = array.shape[0]
@@ -266,3 +256,12 @@ def plot_specificity(average_specificity):
     # Display the plot
     plt.tight_layout()
     plt.show()
+
+def std(recall_arr, recall_std):
+    formatted_data = np.empty_like(recall_arr, dtype=object)
+    for i in range(recall_arr.shape[0]):
+        for j in range(recall_arr.shape[1]):
+            avg = np.round(recall_arr[i, j], 2)
+            std = np.round(recall_std[i, j], 2)
+            formatted_data[i, j] = f"{avg:.2f} ± {std:.2f}"
+    return formatted_data
