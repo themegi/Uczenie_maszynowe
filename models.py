@@ -5,11 +5,10 @@ from sklearn import svm
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.linear_model import LogisticRegression
 from tabulate import tabulate
-from scipy import stats
 
 
 def models_dataset(auto_data, auto_cat, n_splits, n_repeats):
-    X, y = utils.first_proccess(auto_data, auto_cat)
+    X, y = utils.first_process(auto_data, auto_cat)
 
     kfold = RepeatedStratifiedKFold(n_splits=n_splits, n_repeats=n_repeats, random_state=1)
 
@@ -36,8 +35,6 @@ def models_dataset(auto_data, auto_cat, n_splits, n_repeats):
         svm_model = svm.SVC()
         svm_model.fit(train_X, train_y.ravel())
         y_pred = svm_model.predict(test_X)
-        # print("SVM MODEL:")
-        # print(classification_report(test_y, y_pred, zero_division=0))
         avg_sensitivity_svm[counter] = utils.calculate_sensitivity(test_y, y_pred)
         avg_specificity_svm[counter] = utils.calculate_specificity(test_y, y_pred)
 
@@ -45,8 +42,6 @@ def models_dataset(auto_data, auto_cat, n_splits, n_repeats):
         dt_model = DecisionTreeClassifier()
         dt_model.fit(train_X, train_y.ravel())
         y_pred = dt_model.predict(test_X)
-        # print("\nDecision Tree MODEL:")
-        # print(classification_report(test_y, y_pred, zero_division=0))
         avg_sensitivity_dt[counter] = utils.calculate_sensitivity(test_y, y_pred)
         avg_specificity_dt[counter] = utils.calculate_specificity(test_y, y_pred)
 
@@ -54,8 +49,6 @@ def models_dataset(auto_data, auto_cat, n_splits, n_repeats):
         lr_model = LogisticRegression(solver='saga', max_iter=9000)
         lr_model.fit(train_X, train_y.ravel())
         y_pred = lr_model.predict(test_X)
-        # print("\nLogistic Regression MODEL:")
-        # print(classification_report(test_y, y_pred, zero_division=0))
         avg_sensitivity_lr[counter] = utils.calculate_sensitivity(test_y, y_pred)
         avg_specificity_lr[counter] = utils.calculate_specificity(test_y, y_pred)
         counter += 1

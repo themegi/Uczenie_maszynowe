@@ -10,11 +10,6 @@ import matplotlib.pyplot as plt
 from tabulate import tabulate
 
 
-def sortDf(df):
-    sorted_df = df.sort_values(by='Class', key=lambda x: df['Class'].value_counts().sort_values(ascending=True)[x])
-    return sorted_df
-
-
 def getCatIndex(df):
     if is_numeric_dtype(df['Class']):
         cat_values = list(df.columns.get_indexer(df.select_dtypes(include=['object']).columns))
@@ -23,7 +18,7 @@ def getCatIndex(df):
     return cat_values
 
 
-def first_proccess(data, categories):
+def first_process(data, categories):
     X = data.drop(["Class"], axis=1)
     y = data["Class"]
     y = y.to_numpy()
