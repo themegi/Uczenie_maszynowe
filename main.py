@@ -1,9 +1,9 @@
 import data
 import models
 
-# print("####Automobile Dataset#####")
-# auto_data, auto_cat = data.automobileRead()
-# models.models_dataset(auto_data, auto_cat, 3, 5)
+print("####Automobile Dataset#####")
+auto_data, auto_cat = data.automobileRead()
+models.models_dataset(auto_data, auto_cat, 3, 5)
 
 print("####Cleveland Dataset#####")
 cleveland_data, cleveland_cat = data.clevelandRead()
@@ -21,6 +21,3 @@ print("####Yeast Dataset#####")
 yeast_data, yeast_cat = data.yeastRead()
 models.models_dataset(yeast_data, yeast_cat, 5, 4)
 
-
-
-#recall = sensitivity

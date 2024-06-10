@@ -7,6 +7,7 @@ from sklearn.neighbors import NearestNeighbors
 from sklearn import preprocessing
 from collections import Counter
 import matplotlib.pyplot as plt
+from tabulate import tabulate
 
 
 def sortDf(df):
@@ -163,13 +164,38 @@ def mean_sensitivity(sensitivity):
 def mean_specificity(specificity):
     return np.mean(specificity, axis=0)
 
+def p_array(p_values):
+    column = []
+    for i in p_values:
+        if i <= 0.05:
+            column.append('+')
+        else:
+            column.append('-')
+    column = np.array(column).reshape(-1, 1)
+    p_array = np.column_stack((p_values, column))
+    return p_array
+
+def class_labels(array):
+    num_classes = array.shape[0]
+    class_labels = []
+    for i in range(num_classes):
+        class_labels.append('Klasa ' + str(i))
+    return class_labels
+
 def t_test(svm, dt, lr):
+    headers = class_labels(svm)
     t_statistic, p_value = stats.ttest_ind(svm, dt)
     print(f"Paired t-test (SVM, DT): t-statistic = {t_statistic}, p-value = {p_value}")
+    p_value = p_value.reshape((1,-1))
+    print(tabulate(p_value, headers, tablefmt='latex'))
     t_statistic, p_value = stats.ttest_ind(svm, lr)
     print(f"Paired t-test (SVM, LR): t-statistic = {t_statistic}, p-value = {p_value}")
+    p_value = p_value.reshape((1,-1))
+    print(tabulate(p_value, headers, tablefmt='latex'))
     t_statistic, p_value = stats.ttest_ind(dt, lr)
     print(f"Paired t-test (DT, LR): t-statistic = {t_statistic}, p-value = {p_value}")
+    p_value = p_value.reshape((1, -1))
+    print(tabulate(p_value, headers, tablefmt='latex'))
 
 def plot_recall(average_recall):
     num_classifiers, num_classes = average_recall.shape
@@ -204,6 +230,7 @@ def plot_recall(average_recall):
     # Display the plot
     plt.tight_layout()
     plt.show()
+    return class_labels
 
 
 def plot_specificity(average_specificity):
